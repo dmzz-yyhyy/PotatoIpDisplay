@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "indi.nightfish.potato_ip_display"
-version = "0.1"
+version = "1.0"
 
 repositories {
     mavenCentral()

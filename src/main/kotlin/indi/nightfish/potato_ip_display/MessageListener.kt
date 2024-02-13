@@ -15,7 +15,7 @@ class MessageListener(private var proxy: ProxyServer){
 
 
 
-        @Subscribe(order = PostOrder.FIRST)
+        @Subscribe(order = PostOrder.LAST)
         fun messageEvent(event: PlayerChatEvent) {
                 val player = event.player
                 val playerName = player.username
