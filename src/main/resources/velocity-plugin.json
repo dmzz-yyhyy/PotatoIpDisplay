@@ -1,0 +1,7 @@
+{
+  "id": "potatoipdisplay",
+  "name": "PotatoIpDisplay",
+  "version": "1.0",
+  "authors": ["NightFish"],
+  "main": "indi.nightfish.potato_ip_display.PotatoIpDisplay"
+}
