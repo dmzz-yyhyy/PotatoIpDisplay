@@ -5,22 +5,19 @@ plugins {
 }
 
 group = "indi.nightfish.potato_ip_display"
-version = "0.1"
+version = "1.0-bukkit"
 
 repositories {
     mavenCentral()
-    maven {
-        name = "papermc"
-        url = uri("https://repo.papermc.io/repository/maven-public/")
-    }
+    maven ("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
 }
 
 dependencies {
     implementation ("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22")
     testImplementation(kotlin("test"))
-    compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
     implementation("org.apache.httpcomponents.client5:httpclient5:5.3.1")
     implementation("com.google.code.gson:gson:2.10.1")
+    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
 }
 
 tasks.test {

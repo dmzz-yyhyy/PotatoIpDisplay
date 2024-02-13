@@ -1,34 +1,24 @@
 package indi.nightfish.potato_ip_display
 
-import com.google.inject.Inject
-import com.velocitypowered.api.event.PostOrder
-import com.velocitypowered.api.event.Subscribe
-import com.velocitypowered.api.event.player.PlayerChatEvent
-import com.velocitypowered.api.proxy.Player
-import com.velocitypowered.api.proxy.ProxyServer
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextColor
+import org.bukkit.Bukkit
+import org.bukkit.ChatColor
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
+import org.bukkit.event.Listener
 import java.util.function.Consumer
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 
-class MessageListener(private var proxy: ProxyServer){
+class MessageListener: Listener{
 
 
-
-        @Subscribe(order = PostOrder.LAST)
-        fun messageEvent(event: PlayerChatEvent) {
+        @EventHandler(priority = EventPriority.LOWEST)
+        fun onPlayerChat(event: AsyncPlayerChatEvent) {
                 val player = event.player
-                val playerName = player.username
+                val playerName = player.name
                 val msg = event.message
-                proxy.allPlayers.forEach(Consumer { p: Player ->
-                        p.sendMessage(
-                                Component.text("[").color(TextColor.color(170, 170, 170)).append(
-                                Component.text("${IpATTRMap.playerIpATTRMap[event.player.username]}").color(TextColor.color(85, 255, 255))).append(
-                                Component.text("]").color(TextColor.color(170, 170, 170))).append(
-                                        Component.text(" $playerName >> $msg").color(TextColor.color(255, 255, 255))
-                                )
-                        )
-                })
-                event.result = PlayerChatEvent.ChatResult.denied()
+                Bukkit.getServer().broadcastMessage("${ChatColor.GRAY}[${ChatColor.AQUA}${IpATTRMap.playerIpATTRMap[playerName]}${ChatColor.GRAY}] ${ChatColor.RESET}$playerName ${ChatColor.GRAY}>> ${ChatColor.RESET}$msg")
+                event.isCancelled = true
         }
 }

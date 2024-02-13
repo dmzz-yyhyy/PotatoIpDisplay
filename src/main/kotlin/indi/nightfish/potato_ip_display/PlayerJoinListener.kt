@@ -1,43 +1,32 @@
 package indi.nightfish.potato_ip_display
 
 import com.google.gson.Gson
-import com.google.inject.Inject
-import com.velocitypowered.api.event.Subscribe
-import com.velocitypowered.api.event.connection.LoginEvent
-import com.velocitypowered.api.event.player.ServerPostConnectEvent
-import com.velocitypowered.api.proxy.ProxyServer
 import com.wdbyte.httpclient.HttpClient5Get
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
-import net.kyori.adventure.text.format.TextColor
-import org.slf4j.Logger
+import org.bukkit.Bukkit
+import org.bukkit.ChatColor
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerLoginEvent
 
 
-class PlayerJoinListener(private val logger: Logger){
+class PlayerJoinListener: Listener{
 
-
-    @Subscribe
-    fun onPlayerLoin(event: LoginEvent) {
-        val playerAddress = event.player.remoteAddress.hostName
+    @EventHandler
+    fun onPlayerLoin(event: PlayerLoginEvent) {
+        val playerAddress = event.realAddress.hostAddress
         val player = event.player
-        val playerName = player.username
+        val playerName = player.name
         val resJson = HttpClient5Get.get("https://whois.pconline.com.cn/ipJson.jsp?ip=$playerAddress&json=true")
         val gson = Gson().fromJson(resJson, IpData::class.java)
         val pro = gson.pro.replace("省","")
         val addr = gson.addr
         IpATTRMap.playerIpATTRMap[playerName] = pro
-        logger.info("Player named $playerName connect to proxy from $addr")
+        Bukkit.getServer().logger.info("Player named $playerName connect to proxy from $addr")
     }
-    @Subscribe
-    fun onPlayerLogin(event: ServerPostConnectEvent) {
-        event.player.sendMessage(
-                Component.text("[").color(TextColor.color(85, 85, 85)).append(
-            Component.text("PotatoIpDisplay").color(TextColor.color(255, 170, 0))).append(
-            Component.text("] ").color(TextColor.color(85, 85, 85))).append(
-            Component.text("您当前ip归属地 ").color(TextColor.color(255, 255, 85))).append(
-                Component.text("[").color(TextColor.color(170, 170, 170))).append(
-                Component.text("${IpATTRMap.playerIpATTRMap[event.player.username]}").color(TextColor.color(85, 255, 255))).append(
-            Component.text("]").color(TextColor.color(170, 170, 170))))
+    @EventHandler
+    fun onPlayerLogin(event: PlayerJoinEvent) {
+        event.player.sendMessage("${ChatColor.DARK_GRAY}[${ChatColor.GOLD}PotatoIpDisplay${ChatColor.DARK_GRAY}] ${ChatColor.YELLOW}您当前ip归属地 ${ChatColor.GRAY}[${ChatColor.AQUA}${IpATTRMap.playerIpATTRMap[event.player.name]}${ChatColor.GRAY}]${ChatColor.RESET}")
     }
 }
 

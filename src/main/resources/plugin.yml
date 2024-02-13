@@ -1,0 +1,4 @@
+name: PotatoIdDisplay
+main: indi.nightfish.potato_ip_display.PotatoIpDisplay
+version: 1.0
+author: "NightFish"
