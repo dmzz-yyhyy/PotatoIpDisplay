@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "indi.nightfish.potato_ip_display"
-version = "1.0-bukkit"
+version = "1.1-bukkit"
 
 repositories {
     mavenCentral()
