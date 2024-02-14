@@ -1,11 +1,9 @@
 package indi.nightfish.potato_ip_display
 
-import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
 
-
-
+@Suppress("unused")
 class PotatoIpDisplay : JavaPlugin() {
     override fun onLoad() {
         super.onLoad()

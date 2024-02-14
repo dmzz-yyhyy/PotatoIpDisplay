@@ -1,7 +1,6 @@
 package indi.nightfish.potato_ip_display
 
 import com.google.gson.Gson
-import com.wdbyte.httpclient.HttpClient5Get
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.event.EventHandler

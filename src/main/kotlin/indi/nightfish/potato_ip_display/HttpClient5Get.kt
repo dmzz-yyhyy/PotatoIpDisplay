@@ -1,4 +1,4 @@
-package com.wdbyte.httpclient
+package indi.nightfish.potato_ip_display
 
 import org.apache.hc.client5.http.classic.methods.HttpGet
 import org.apache.hc.client5.http.impl.classic.HttpClients
