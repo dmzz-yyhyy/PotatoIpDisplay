@@ -12,7 +12,7 @@ import com.velocitypowered.api.proxy.ProxyServer
 @Plugin(
     id = "potatoipdisplay",
     name = "PotatoIpDisplay",
-    version = "1.0",
+    version = "1.1",
     authors = ["NightFish"]
 )
 class PotatoIpDisplay(
