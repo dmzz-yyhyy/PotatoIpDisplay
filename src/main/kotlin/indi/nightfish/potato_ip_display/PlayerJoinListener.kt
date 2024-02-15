@@ -20,7 +20,7 @@ class PlayerJoinListener : Listener {
         val gson = Gson().fromJson(resJson, IpData::class.java)
         val addr = gson.addr
         val pro = if (gson.pro.replace("省", "") == "") {
-            Regex(pattern = """^[\u4e00-\u9fa5]+""")
+            Regex(pattern = """[\u4e00-\u9fa5]+""")
                 .find(addr)?.value ?: ""
         } else {
             gson.pro.replace("省", "")
