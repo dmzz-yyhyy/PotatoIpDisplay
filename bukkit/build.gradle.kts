@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.22"
     id("idea")
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("xyz.jpenilla.run-paper") version "2.2.2"
+    id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 repositories {
@@ -14,7 +14,7 @@ repositories {
 dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.11.4")
+    compileOnly("me.clip:placeholderapi:2.11.6")
     implementation("org.lionsoul:ip2region:2.7.0")
 }
 val pluginVersion = project.parent?.version
