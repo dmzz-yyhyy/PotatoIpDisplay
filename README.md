@@ -2,17 +2,21 @@
 
 一款提供查询与显示玩家 IP 归属地信息的 Bukkit 插件。
 
+使用文档详见 [此处](https://upt.curiousers.org/docs/PotatoIpDisplay/intro) 。
+
 ## 特性
 
 ### 高效率
-- `ip2region` 可以提供微秒级别的查询响应时间，且支持数据库内存缓存
+- 支持本地离线查询，极速响应
 - 异步的查询
-- 基于 IP 的结果缓存，极速响应
+- 基于 IP 的结果缓存
 
 ### 多种查询模式
-- `ip2region` - [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region) 本地查询
-- `pconline` - [太平洋网络IP地址查询Web接口](http://whois.pconline.com.cn/) 在线查询
-- `ip-api` - [IP-API.com IP Geolocation API](https://ip-api.com/) 在线查询
+- `ip2region` - [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region) 本地查询 提供IPv4查询
+- `pconline` - [太平洋网络IP地址查询Web接口](http://whois.pconline.com.cn/) 在线查询 提供IPv4查询
+- `ip-api` - [IP-API.com IP Geolocation API](https://ip-api.com/) 在线查询 提供IPv4查询
+- `cz88` - [纯真社区版IP库](https://www.cz88.net/help?id=free) 本地查询 提供IPv4、IPv6查询 （即将支持）
+  - IP地址位置数据由 [纯真CZ88](https://www.cz88.net)提供支持
 
 ### 以及
 - 提供可自定义的配置文件
@@ -20,8 +24,7 @@
   - *玩家称号，消息格式化，等等*
 - 插件最初为 [土豆网络](https://upt.curiousers.org) 定制，开源后采纳了大家提供的许多建议，相比初版已经优化和解决了不少问题。感谢你的帮助！
 
-## 详细使用文档（中文）
-详见 [此处](https://upt.curiousers.org/docs/PotatoIpDisplay/intro) 。
+## 
 
 ## 命令与权限
 
