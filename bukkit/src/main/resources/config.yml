@@ -3,7 +3,7 @@
 # 详情：[https://github.com/dmzz-yyhyy/PotatoIpDisplay]
 
 # 请勿修改！
-config-version: 1
+config-version: 2
 
 # 常规设置
 options:
@@ -11,6 +11,8 @@ options:
   # "ip2region" 模式为本地查询，插件会自动保存内置的文件至对应路径。
   # 也可以从 [https://github.com/lionsoul2014/ip2region/tree/master/data] 下载
   mode: "ip2region"
+  # IPv6 查询模式: "disabled"（禁用）, "ping0"（在线 API）
+  mode-ipv6: "ping0"
   # 缓存模式：只有模式设置为 ip2region 时生效，用于加速查询。
   # "none": 完全基于文件，不进行缓存。
   # "vindex": 额外占用固定的 512 KB 内存，缓存 VectorIndex 数据。
@@ -18,21 +20,34 @@ options:
   xdb-buffer: "vindex"
   # 开启 bStats 统计
   allow-bstats: true
+  # 自定义对于 “未知” 结果返回的值
+  custom-unknown-string: "未知"
 
 # 消息设置
 messages:
+  # 插件内部可用 placeholder 示例（可用于 messages.*.string）：
+  # 注意：部分查询结果可用性取决于数据源；此处并非 PAPI 变量。
+  # %msg%        -> 原消息
+  # %playerName% -> 玩家名
+  # %ipRegion%   -> IP 所属区域
+  # %ipCountry%  -> IP 所属国家
+  # %ipProvince% -> IP 所属省
+  # %ipCity%     -> IP 所属城市
+  # %ipISP%      -> IP 所属 ISP
+  # %ipFallback% -> 回退变量（详情查阅插件文档）
+
   player-chat:
     # 是否接管玩家消息事件。
     # 与其他消息格式化插件冲突。
     enabled: false
     # 消息格式
-    string: "§7[§b%ipAttr%§7] §f%playerName% §7>> §f%msg%"
+    string: "§7[§b%ipFallback%§7] §f%playerName% §7>> §f%msg%"
 
   player-login:
     # 是否在玩家登录后发送一条消息显示 IP 归属地。
     enabled: true
     # 消息格式
-    string: "§7[§6PotatoIPDisplay§7] §e您当前IP归属地 §7[§b%ipAttr%§7]"
+    string: "§7[§6PotatoIPDisplay§7] §e您当前IP归属地 §7[§b%ipFallback%§7]"
 
 # Placeholder API 设置
 papi:

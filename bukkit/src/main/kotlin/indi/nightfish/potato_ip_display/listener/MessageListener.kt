@@ -1,7 +1,7 @@
 package indi.nightfish.potato_ip_display.listener
 
 import indi.nightfish.potato_ip_display.PotatoIpDisplay
-import indi.nightfish.potato_ip_display.util.IpAttributeMap
+import indi.nightfish.potato_ip_display.parser.IpParseFactory
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -14,15 +14,18 @@ class MessageListener : Listener {
     @EventHandler(priority = EventPriority.LOWEST)
 
     fun onPlayerChat(event: AsyncPlayerChatEvent) {
-        val playerName = event.player.name
-        val ipAttr = IpAttributeMap.playerIpAttributeMap[playerName] ?: "未知"
-
-        val chatmsg = (plugin.conf.message.playerChat.string
-            .replace("%ipAttr%", ipAttr)
-            .replace("%playerName%", "%1\$s")
-            .replace("%msg%", "%2\$s"))
-
-        event.format = chatmsg
+        val ip = IpParseFactory.getPlayerIp(event.player)
+        val data = IpParseFactory.parse(ip)
+        var msg = plugin.conf.message.playerChat.string
+        msg = msg.replace("%playerName%", $$"%1$s")
+            .replace("%msg%", $$"%2$s")
+            .replace("%ipRegion%", data.region)
+            .replace("%ipCountry%", data.country)
+            .replace("%ipProvince%", data.province)
+            .replace("%ipCity%", data.city)
+            .replace("%ipISP%", data.isp)
+            .replace("%ipFallback%", data.fallback)
+        event.format = msg
     }
 
 }

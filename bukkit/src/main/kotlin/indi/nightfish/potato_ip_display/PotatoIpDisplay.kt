@@ -1,13 +1,16 @@
 package indi.nightfish.potato_ip_display
 
 import indi.nightfish.potato_ip_display.command.PotatoIpDisplayCommand
-import indi.nightfish.potato_ip_display.integration.PlaceholderIntergration
+import indi.nightfish.potato_ip_display.integration.PlaceholderIntegration
 import indi.nightfish.potato_ip_display.listener.MessageListener
 import indi.nightfish.potato_ip_display.listener.PlayerJoinListener
 import indi.nightfish.potato_ip_display.util.Config
+import indi.nightfish.potato_ip_display.util.ConfigManager
 import indi.nightfish.potato_ip_display.util.UpdateUtil
-import indi.nightfish.potato_ip_display.util.loadConfig
-import me.clip.placeholderapi.metrics.bukkit.Metrics
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import org.bstats.bukkit.Metrics
 import org.bukkit.Bukkit
 import org.bukkit.event.HandlerList
 import org.bukkit.plugin.java.JavaPlugin
@@ -20,6 +23,7 @@ class PotatoIpDisplay : JavaPlugin() {
         lateinit var instance: PotatoIpDisplay
         val plugin by lazy { instance }
     }
+    val pluginScope = CoroutineScope(Dispatchers.Default)
 
     lateinit var conf: Config
 
@@ -40,10 +44,11 @@ class PotatoIpDisplay : JavaPlugin() {
 
     override fun onDisable() {
         super.onDisable()
+        pluginScope.cancel()
         log("Disabled")
     }
 
-    private fun initResources() {
+    fun initResources() {
         val configFile = File(dataFolder, "config.yml")
         val dbFile = File(dataFolder, "ip2region.xdb")
         val authors = this.description.authors
@@ -68,12 +73,12 @@ class PotatoIpDisplay : JavaPlugin() {
 
     fun initPlugin() {
         val pm = Bukkit.getPluginManager()
-        conf = loadConfig(config)
+        conf = ConfigManager.load(this)
 
-        PlaceholderIntergration().unregister()
-        if (conf.papi.enabled) {
-            if (pm.getPlugin("PlaceholderAPI") != null) {
-                PlaceholderIntergration().register()
+        if (pm.getPlugin("PlaceholderAPI") != null) {
+            PlaceholderIntegration().unregister()
+            if (conf.papi.enabled) {
+                PlaceholderIntegration().register()
             } else throw RuntimeException("PlaceholderAPI enabled in config but NOT installed!")
         }
 

@@ -5,14 +5,13 @@ import indi.nightfish.potato_ip_display.parser.IpParse
 import indi.nightfish.potato_ip_display.util.IpAttributeMap
 import org.lionsoul.ip2region.xdb.Searcher
 import java.io.File
-import java.util.concurrent.CompletableFuture
 
 
 class Ip2regionParser(private val ip: String) : IpParse {
     private val plugin = PotatoIpDisplay.plugin
     private val dataFolder get() = plugin.dataFolder
     private val dbPath = File(dataFolder, "ip2region.xdb").toPath().toString()
-    private val unknown: String = "未知"
+    private val unknown: String = plugin.conf.options.customUnknownString
     private val xdbBuffer = plugin.conf.options.xdbBuffer
 
     private val searcher by lazy {
@@ -34,29 +33,29 @@ class Ip2regionParser(private val ip: String) : IpParse {
     */
 
     override fun getCountry(): String {
-        val result = getIp2regionDataAsync().split("|")[0]
+        val result = getIp2regionData().split("|")[0]
         return if (result == "0") unknown else result
     }
 
     override fun getRegion(): String {
-        val result = getIp2regionDataAsync().split("|")[1]
+        val result = getIp2regionData().split("|")[1]
         return if (result == "0") unknown else result
     }
 
     override fun getProvince(): String {
-        val result = getIp2regionDataAsync().split("|")[2]
+        val result = getIp2regionData().split("|")[2]
             .replace("省", "")
         return if (result == "0") unknown else result
     }
 
     override fun getCity(): String {
-        val result = getIp2regionDataAsync().split("|")[3]
+        val result = getIp2regionData().split("|")[3]
             .replace("市", "")
         return if (result == "0") unknown else result
     }
 
     override fun getISP(): String {
-        val result = getIp2regionDataAsync().split("|")[4]
+        val result = getIp2regionData().split("|")[4]
         return if (result == "0") unknown else result
     }
 
@@ -71,19 +70,11 @@ class Ip2regionParser(private val ip: String) : IpParse {
         return unknown
     }
 
-    private fun getIp2regionDataAsync(): String {
-        val map = IpAttributeMap.ip2regionRawDataMap[ip]
-        if (map != null) return map
-
-        val future = CompletableFuture<String>()
-        val thread = Thread {
-            val result = searcher.search(ip)
-            future.complete(result)
-            IpAttributeMap.ip2regionRawDataMap[ip] = result
-        }
-        thread.start()
-        return future.get()
+    private fun getIp2regionData(): String {
+        IpAttributeMap.ip2regionRawDataMap[ip]?.let { return it }
+        val result = searcher.search(ip)
+        IpAttributeMap.ip2regionRawDataMap[ip] = result
+        return result
     }
-
 
 }
