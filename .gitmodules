@@ -1,0 +1,3 @@
+[submodule "external/ipdb"]
+	path = external/ipdb
+	url = https://github.com/yukonisen/ipdb-java.git

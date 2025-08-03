@@ -6,7 +6,7 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import org.bukkit.entity.Player
 
 
-class PlaceholderIntergration : PlaceholderExpansion() {
+class PlaceholderIntegration : PlaceholderExpansion() {
     private val plugin = PotatoIpDisplay.plugin
 
     override fun getAuthor(): String {
@@ -26,16 +26,16 @@ class PlaceholderIntergration : PlaceholderExpansion() {
         params: String
     ): String? {
         if (player == null) { return null}
-        val ip: String = IpParseFactory.getPlayerAddress(player)
-        val ipParse = IpParseFactory.getIpParse(ip)
+        val ip: String = IpParseFactory.getPlayerIp(player)
+        val ipParse = IpParseFactory.parse(ip)
         return when (params) {
             "ip" -> ip
-            "country" -> ipParse.getCountry()
-            "province" -> ipParse.getProvince()
-            "city" -> ipParse.getCity()
-            "region" -> ipParse.getRegion()
-            "isp" -> ipParse.getISP()
-            "fallback" -> ipParse.getFallback()
+            "country" -> ipParse.country
+            "province" -> ipParse.province
+            "city" -> ipParse.country
+            "region" -> ipParse.region
+            "isp" -> ipParse.isp
+            "fallback" -> ipParse.fallback
             else -> null
         }
     }

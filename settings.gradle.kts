@@ -14,3 +14,5 @@ include (
     "bukkit",
     /*"velocity",*/
 )
+include("ipdb")
+project(":ipdb").projectDir = file("external/ipdb")

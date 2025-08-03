@@ -2,13 +2,17 @@ package indi.nightfish.potato_ip_display.command
 
 import indi.nightfish.potato_ip_display.PotatoIpDisplay
 import indi.nightfish.potato_ip_display.parser.IpParseFactory
+import indi.nightfish.potato_ip_display.util.ConfigManager
 import indi.nightfish.potato_ip_display.util.IpAttributeMap
+import indi.nightfish.potato_ip_display.util.IpData
 import indi.nightfish.potato_ip_display.util.UpdateUtil
-import indi.nightfish.potato_ip_display.util.loadConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+import org.bukkit.event.HandlerList
 
 /**
  * The /potatoipdisplay command.
@@ -22,103 +26,115 @@ class PotatoIpDisplayCommand : TabExecutor {
         label: String,
         args: Array<String>
     ): Boolean {
-
         if (!sender.hasPermission("potatoipdisplay.command")) {
             sendNoPerms(sender)
             return true
         }
 
-        if (args.isEmpty()) {
-
-            var mode = plugin.conf.options.mode
-            if (mode == "ip2region") {
-                mode += " [${plugin.conf.options.xdbBuffer}]"
-            }
-
-
-            sendMsg(sender, "§f工作模式: §b$mode§f", true)
-            sendMsg(sender, "§7尝试检查更新……", false)
-            UpdateUtil.checkForUpdatesAsync { result ->
-                sendMsg(sender, result, false)
-            }
-            return true
+        when (args.getOrNull(0)?.lowercase()) {
+            null -> showStatus(sender)
+            "about" -> showAbout(sender)
+            "reload" -> reloadPlugin(sender)
+            "lookup" -> lookupCommand(sender, label, args)
+            "clear" -> clearCommand(sender, label, args)
+            else -> sender.sendMessage("§c未知子命令 (about; reload; lookup; clear)")
         }
+        return true
+    }
 
-        when (args[0].lowercase()) {
-            "about" -> {
-                sendMsg(sender, "§f版本 §b${plugin.description.version} §fby §b${plugin.description.authors.joinToString(", ")}", true)
-                sendMsg(sender, "§6PotatoIPDisplay §f是§a免费§f的开源插件，详见:", false)
-                sendMsg(sender, "GitHub§f > §7\n https://github.com/dmzz-yyhyy/PotatoIpDisplay", false)
-                sendMsg(sender, "使用文档§f > §7\n https://upt.curiousers.org/docs/PotatoIpDisplay/intro", false)
-                return true
+    private fun showStatus(sender: CommandSender) {
+        val options = plugin.conf.options
+        val modeDisplay = if (options.mode == "ip2region") "ip2region [${options.xdbBuffer}]" else options.mode
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §fIPv4 工作模式: §b$modeDisplay")
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §fIPv6 工作模式: §b${options.modeV6}")
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §7尝试检查更新……")
+        UpdateUtil.checkForUpdatesAsync { result ->
+            sender.sendMessage("§7[§6PotatoIPDisplay§7] $result")
+        }
+    }
+
+    private fun showAbout(sender: CommandSender) {
+        val desc = plugin.description
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §f版本 §b${desc.version} §fby §b${desc.authors.joinToString(", ")}")
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §6开源项目地址: §bhttps://github.com/dmzz-yyhyy/PotatoIpDisplay")
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §6文档: §bhttps://upt.curiousers.org/docs/PotatoIpDisplay/intro")
+    }
+
+    private fun reloadPlugin(sender: CommandSender) {
+        if (!sender.hasPermission("potatoipdisplay.reload")) {
+            sender.sendMessage("§c您没有执行重载的权限")
+            return
+        }
+        plugin.logger.info("正在重载 v${plugin.description.version}...")
+        kotlin.runCatching {
+            plugin.conf = ConfigManager.load(plugin)
+            plugin.initResources()
+            HandlerList.unregisterAll(plugin)
+            plugin.initPlugin()
+        }.onSuccess {
+            sender.sendMessage("§7[§6PotatoIPDisplay§7] §a重载成功！")
+        }.onFailure { ex ->
+            sender.sendMessage("§7[§6PotatoIPDisplay§7] §c重载失败，请查看控制台错误信息。")
+            plugin.logger.severe("重载时出现异常:")
+            ex.printStackTrace()
+        }
+    }
+
+    private fun lookupCommand(sender: CommandSender, label: String, args: Array<String>) {
+        if (!sender.hasPermission("potatoipdisplay.lookup")) {
+            sendNoPerms(sender)
+            return
+        }
+        val target = args.getOrNull(1) ?: run {
+            sender.sendMessage("§e用法: /$label lookup [玩家名|IPv4]")
+            return
+        }
+        val address = Bukkit.getPlayerExact(target)?.address?.address?.hostAddress
+        val ip = address ?: target
+        if (address == null && !IpParseFactory. regexValidated(ip)) {
+            sender.sendMessage("§c玩家离线，或 IP 无效")
+            return
+        }
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §f查询: §b$ip")
+        plugin.pluginScope.launch(Dispatchers.IO) {
+            val data = IpParseFactory.parse(ip)
+            sender.sendMessage(formatLookup(ip, data))
+        }
+    }
+
+    private fun clearCommand(sender: CommandSender, label: String, args: Array<String>) {
+        val option = args.getOrNull(1)?.lowercase() ?: run {
+            val itemCount = IpAttributeMap.playerIpAttributeMap.size
+            val cacheCount = IpAttributeMap.ip2regionRawDataMap.size + IpAttributeMap.pconlineRawDataMap.size + IpAttributeMap.ipApiRawDataMap.size
+            sender.sendMessage("§7[§6PotatoIPDisplay§7] §e用法: /$label clear <player|cache>")
+            sender.sendMessage("§7[§6PotatoIPDisplay§7] §f缓存: 玩家 §b$itemCount§f 项, 查询 §b$cacheCount§f 项")
+            return
+        }
+        val cleared = when (option) {
+            "player" -> IpAttributeMap.playerIpAttributeMap.also { it.clear() }.size
+            "cache" -> {
+                val map = IpAttributeMap
+                val total = map.ip2regionRawDataMap.size + map.pconlineRawDataMap.size + map.ipApiRawDataMap.size
+                map.ip2regionRawDataMap.clear(); map.pconlineRawDataMap.clear(); map.ipApiRawDataMap.clear()
+                total
             }
-
-            "reload" -> {
-                if (!sender.hasPermission("potatoipdisplay.reload")) {
-                    sendNoPerms(sender)
-                    return true
-                }
-                plugin.log("PotatoIPDisplay (${plugin.description.version}) 正在尝试重载。若遇到插件问题，请重启服务器。")
-                runCatching {
-                    plugin.reloadConfig()
-                    plugin.conf = loadConfig(plugin.config)
-                    plugin.initPlugin()
-                }.onFailure {
-                    sendMsg(sender, "§c重载失败，请检查控制台输出信息", true)
-                }.onSuccess {
-                    sendMsg(sender, "§a重载成功！", true)
-                }
-                return true
-            }
-
-            "lookup" -> {
-                if (!sender.hasPermission("potatoipdisplay.lookup")) {
-                    sendNoPerms(sender)
-                    return true
-                }
-                if (args.size < 2) {
-                    sendMsg(sender, "§e/$label lookup [玩家] §f>> 查询在线玩家", false)
-                    sendMsg(sender, "§e/$label lookup [IPv4] §f>> 查询 IPv4", false)
-                    return true
-                }
-
-                val target = args[1]
-
-                val player = Bukkit.getServer().getPlayer(target)
-                if (player != null) {
-                    sendMsg(sender, "§f查询玩家: §b$target", true)
-                    sendMsg(sender, lookup(IpParseFactory.getPlayerAddress(player), player.name), false)
-                    return true
-                }
-
-                if (IpParseFactory.regexValidated(target)) {
-                    sendMsg(sender, "§f查询 IPv4: §b$target", true)
-                    sendMsg(sender, lookup(target), false)
-                } else sendMsg(sender, "§c查询的玩家离线，或 IPv4 无效", true)
-                return true
-            }
-
-            "clear" -> {
-                if (args.size < 2) {
-                    val map = IpAttributeMap
-                    val totalCacheSize =
-                        map.ip2regionRawDataMap.size + map.pconlineRawDataMap.size + map.ipApiRawDataMap.size
-                    val playerCacheSize = map.playerIpAttributeMap.size
-                    sendMsg(sender, "§e/$label clear player §f>> 清除玩家缓存 (当前 §b$playerCacheSize §f项)", false)
-                    sendMsg(sender, "§e/$label clear cache §f>> 清除查询缓存 (当前 §b$totalCacheSize §f项)", false)
-                    return true
-                }
-
-                val clearedItems = clear(args[1].lowercase())
-                sendMsg(sender, "§f清除完成，共清除了 §b$clearedItems §f项", true)
-                return true
-            }
-
             else -> {
-                sendMsg(sender, "§c未知命令", true)
-                return true
+                sender.sendMessage("§c无效选项: $option")
+                return
             }
         }
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §f已清除 §b$cleared§f 项")
+    }
+
+    private fun formatLookup(ip: String, data: IpData): String {
+        return """§7[§6PotatoIPDisplay§7] §f结果: §b$ip
+国家: ${data.country}
+省份: ${data.province}
+城市: ${data.city}
+区域: ${data.region}
+ISP: ${data.isp}
+回退: ${data.fallback}
+    """.trimIndent()
     }
 
     override fun onTabComplete(
@@ -127,64 +143,16 @@ class PotatoIpDisplayCommand : TabExecutor {
         alias: String,
         args: Array<String>
     ): List<String> {
-        return when {
-            !sender.hasPermission("potatoipdisplay.command") -> emptyList()
-            args.size == 1 -> listOf("lookup", "reload", "clear", "about").filter {
-                it.startsWith(args[0])
+        if (!sender.hasPermission("potatoipdisplay.command")) return emptyList()
+        return when (args.size) {
+            1 -> listOf("about", "reload", "lookup", "clear").filter { it.startsWith(args[0], true) }
+            2 -> when (args[0].lowercase()) {
+                "lookup" -> Bukkit.getOnlinePlayers().map { it.name }.plus("127.0.0.1").filter { it.startsWith(args[1], true) }
+                "clear" -> listOf("player", "cache").filter { it.startsWith(args[1], true) }
+                else -> emptyList()
             }
-
-            args.size == 2 && (args[0] == "lookup") -> {
-                val matchingPlayers =
-                    plugin.server.onlinePlayers.map { it.name }.filter { it.startsWith(args[1]) }
-                matchingPlayers + listOf("127.0.0.1")
-            }
-
-            args.size == 2 && (args[0] == "clear") -> {
-                listOf("player", "cache")
-            }
-
             else -> emptyList()
         }
-    }
-
-    private fun lookup(ip: String, playerName: String = ""): String {
-        val ipParse = IpParseFactory.getIpParse(ip)
-        val mod = if (IpAttributeMap.playerIpAddressMap[playerName] != null) "§a*" else ""
-        return "§f - IP:  §e$ip$mod \n" +
-                "§f - 国家:  §e${ipParse.getCountry()} \n" +
-                "§f - 省市:  §e${ipParse.getProvince()} ${ipParse.getCity()} \n" +
-                "§f - ISP:  §e${ipParse.getISP()} \n" +
-                "§f - IP属地:  §a${ipParse.getFallback()}"
-    }
-
-    private fun clear(target: String): Int {
-        val map = IpAttributeMap
-        var clearedItems = 0
-
-        when (target) {
-            "player" -> {
-                clearedItems += map.playerIpAttributeMap.size
-                map.playerIpAttributeMap.clear()
-            }
-
-            "cache" -> {
-                clearedItems += map.ip2regionRawDataMap.size
-                clearedItems += map.pconlineRawDataMap.size
-                clearedItems += map.ipApiRawDataMap.size
-                map.ip2regionRawDataMap.clear()
-                map.pconlineRawDataMap.clear()
-                map.ipApiRawDataMap.clear()
-            }
-
-            else -> {}
-        }
-        return clearedItems
-    }
-
-
-    private fun sendMsg(sender: CommandSender, msg: String, showPrefix: Boolean) {
-        val prefix = if (showPrefix) "§7[§6PotatoIPDisplay§7] " else ""
-        sender.sendMessage("$prefix$msg")
     }
 
     private fun sendNoPerms(sender: CommandSender) {

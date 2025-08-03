@@ -1,57 +1,63 @@
 package indi.nightfish.potato_ip_display.parser
 
-import indi.nightfish.potato_ip_display.PotatoIpDisplay
 import indi.nightfish.potato_ip_display.PotatoIpDisplay.Instance.plugin
 import indi.nightfish.potato_ip_display.parser.provider.Ip2regionParser
 import indi.nightfish.potato_ip_display.parser.provider.IpApiParser
 import indi.nightfish.potato_ip_display.parser.provider.PconlineParser
+import indi.nightfish.potato_ip_display.parser.providerv6.IpdbParser
 import indi.nightfish.potato_ip_display.util.IpAttributeMap
+import indi.nightfish.potato_ip_display.util.IpCache
+import indi.nightfish.potato_ip_display.util.IpData
 import org.bukkit.entity.Player
-import java.util.logging.Level
+import java.net.InetAddress
 
 
 object IpParseFactory {
 
-    fun getIpParse(ip: String): IpParse{
-        val plugin = PotatoIpDisplay.plugin
-        return when (val mode = plugin.conf.options.mode) {
-            "pconline" -> PconlineParser(ip)
-            "ip2region" -> Ip2regionParser(ip)
-            "ip-api" -> IpApiParser(ip)
-            else -> throw IllegalArgumentException("Invalid mode in config >> $mode")
+    fun parse(ip: String): IpData = IpCache.get(ip) {
+        if (ip.contains(":")) {
+            when (plugin.conf.options.modeV6) {
+                "ipdb" -> IpdbParser(ip).toIpData()
+                else -> throw IllegalArgumentException("Invalid IPv6 mode: ${plugin.conf.options.modeV6}")
+            }
+        } else {
+            when (plugin.conf.options.mode) {
+                "pconline" -> PconlineParser(ip).toIpData()
+                "ip2region" -> Ip2regionParser(ip).toIpData()
+                "ipdb" -> IpdbParser(ip).toIpData()
+                "ip-api" -> IpApiParser(ip).toIpData()
+                else -> throw IllegalArgumentException("Invalid mode: ${plugin.conf.options.mode}")
+            }
         }
     }
 
-    fun getPlayerAddress(player: Player, fallback: String = "0.0.0.0"): String {
-        val playerName = player.name
-        val map = IpAttributeMap.playerIpAddressMap[playerName]
-        if (map != null) return map
-
+    fun getPlayerIp(player: Player, fallback: String = "0.0.0.0"): String {
+        val name = player.name
+        val existing = IpAttributeMap.playerIpAddressMap[name]
+        if (existing != null) return existing
+        val original = player.address?.address?.hostAddress ?: fallback
         val prefix = "potatoipdisplay.override."
-        val original = player.address?.address.toString().replace("/", "")
         val override = player.effectivePermissions.find { it.permission.startsWith(prefix) }
-
         return override?.let {
-            val overrideIP = it.permission.substring(prefix.length).replace("-", ".")
-            if (regexValidated(overrideIP)) {
-                IpAttributeMap.playerIpAddressMap[playerName] = overrideIP
-                return overrideIP
-            } else {
-                plugin.log("Invalid IP for $playerName from permission: ${override.permission}! using fallback $fallback", Level.WARNING)
-                if (original != "null") return original
-                else return fallback
-            }
-        } ?: run {
-            if (original != "null") return original
-            else return fallback
-        }
-
+            val ipStr = it.permission.removePrefix(prefix).replace('-', '.')
+            if (regexValidated(ipStr)) {
+                IpAttributeMap.playerIpAddressMap[name] = ipStr
+                ipStr
+            } else original
+        } ?: original
     }
 
     fun regexValidated(ip: String): Boolean {
-        val ipRegex =
-            """(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}""".toRegex()
-        return ip.matches(ipRegex)
+        val basicPattern = Regex("""^[0-9a-fA-F:.]+$""")
+        if (!basicPattern.matches(ip)) return false
+
+        return try {
+            val address = InetAddress.getByName(ip)
+            !address.hostName.contains(".") || address.hostName == ip
+        } catch (e: Exception) {
+            false
+        }
     }
+
 
 }

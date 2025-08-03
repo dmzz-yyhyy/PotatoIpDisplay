@@ -2,17 +2,17 @@ package indi.nightfish.potato_ip_display.parser.provider
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import indi.nightfish.potato_ip_display.PotatoIpDisplay.Instance.plugin
 import indi.nightfish.potato_ip_display.parser.IpParse
 import indi.nightfish.potato_ip_display.util.IpAttributeMap
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.util.concurrent.CompletableFuture
 
 class IpApiParser(private val ip: String) : IpParse {
-    private val get = getIpApiDataAsync()
-    private val unknown: String = "未知"
+    private val get = getIpApiData()
+    private val unknown: String = plugin.conf.options.customUnknownString
     private val isReservedRange: Boolean =
         (get["status"]?.asString == "fail") && (get["message"]?.asString == "reserved range")
 
@@ -46,33 +46,24 @@ class IpApiParser(private val ip: String) : IpParse {
         return unknown
     }
 
-    private fun getIpApiDataAsync(): JsonObject {
-        val map = IpAttributeMap.ipApiRawDataMap[ip]
-        if (map != null) return map
+    private fun getIpApiData(): JsonObject {
+        IpAttributeMap.ipApiRawDataMap[ip]?.let { return it }
 
-        val future = CompletableFuture<JsonObject>()
-        val thread = Thread {
-            val httpClient = HttpClient.newHttpClient()
-            val url = URI.create("http://ip-api.com/json/$ip?lang=zh-CN")
-            try {
-                val request = HttpRequest.newBuilder(url)
-                    .GET()
-                    .header("Accept", "application/json")
-                    .build()
-                val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-                val jsonObject = Gson().fromJson(response.body(), JsonObject::class.java)
-                future.complete(jsonObject)
-                if (response.statusCode() == 200) {
-                    IpAttributeMap.ipApiRawDataMap[ip] = jsonObject
-                }
-            } catch (_: Exception) {
-                val jsonObject: JsonObject =
-                    Gson().fromJson("{\"err\":\"failed\"}", JsonObject::class.java)
-                future.complete(jsonObject)
-                throw RuntimeException("Error while querying $ip. Common network problem.")
-            }
+        val client = HttpClient.newHttpClient()
+        val url = URI.create("http://ip-api.com/json/$ip?lang=zh-CN")
+        val builder = HttpRequest.newBuilder(url)
+            .GET()
+            .header("Accept", "application/json")
+        val response = try {
+            client.send(builder.build(), HttpResponse.BodyHandlers.ofString())
+        } catch (e: Exception) {
+            return Gson().fromJson("{}", JsonObject::class.java)
         }
-        thread.start()
-        return future.get()
+
+        val json = Gson().fromJson(response.body(), JsonObject::class.java)
+        if (response.statusCode() == 200) {
+            IpAttributeMap.ipApiRawDataMap[ip] = json
+        }
+        return json
     }
 }
