@@ -2,6 +2,7 @@ package indi.nightfish.potato_ip_display.listener
 
 import indi.nightfish.potato_ip_display.PotatoIpDisplay
 import indi.nightfish.potato_ip_display.parser.IpParseFactory
+import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -25,6 +26,13 @@ class MessageListener : Listener {
             .replace("%ipCity%", data.city)
             .replace("%ipISP%", data.isp)
             .replace("%ipFallback%", data.fallback)
+        if (plugin.conf.papi.enabled) {
+            msg = PlaceholderAPI.setPlaceholders(event.player, msg)
+        }
+
+        msg = msg.replace("%", "%%")
+            .replace($$"%%1$s", $$"%1$s")
+            .replace($$"%%2$s", $$"%2$s")
         event.format = msg
     }
 

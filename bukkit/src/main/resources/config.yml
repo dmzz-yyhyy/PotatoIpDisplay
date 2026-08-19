@@ -30,7 +30,8 @@ options:
 # 消息设置
 messages:
   # 插件内部可用 placeholder 示例（可用于 messages.*.string）：
-  # 注意：部分查询结果可用性取决于数据源；此处并非 PAPI 变量。
+  # 下列为插件内置变量，部分查询结果可用性取决于数据源。
+  # 如果启用了 PAPI 集成，也可以同时使用 PAPI 变量。
   # %msg%        -> 原消息
   # %playerName% -> 玩家名
   # %ipRegion%   -> IP 所属区域
@@ -38,7 +39,7 @@ messages:
   # %ipProvince% -> IP 所属省
   # %ipCity%     -> IP 所属城市
   # %ipISP%      -> IP 所属 ISP
-  # %ipFallback% -> 回退变量（详情查阅插件文档）
+  # %ipFallback% -> 回退变量（省份、国家、城市 中的首个非“未知“值）
 
   player-chat:
     # 是否接管玩家消息事件。
@@ -58,4 +59,4 @@ papi:
   # 启用 PAPI 支持。需要安装 Placeholder API。
   enabled: false
   # 可用变量：
-  # [https://github.com/dmzz-yyhyy/PotatoIpDisplay#placeholder-api]
+  # 请参考 [https://github.com/dmzz-yyhyy/PotatoIpDisplay#placeholder-api]

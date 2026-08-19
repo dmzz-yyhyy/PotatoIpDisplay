@@ -6,6 +6,7 @@ import indi.nightfish.potato_ip_display.util.IpAttributeMap
 import indi.nightfish.potato_ip_display.util.pluginAsMainDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
@@ -36,11 +37,13 @@ class PlayerJoinListener: Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         val fallback = IpAttributeMap.playerIpAttributeMap[event.player.name] ?: conf.options.customUnknownString
-        if (PotatoIpDisplay.plugin.conf.message.playerLogin.enabled) {
-            event.player.sendMessage(
-                PotatoIpDisplay.plugin.conf.message.playerLogin.string
-                    .replace("%ipFallback%", fallback)
-            )
+        if (plugin.conf.message.playerLogin.enabled) {
+            var message = plugin.conf.message.playerLogin.string
+                .replace("%ipFallback%", fallback)
+            if (plugin.conf.papi.enabled) {
+                message = PlaceholderAPI.setPlaceholders(event.player, message)
+            }
+            event.player.sendMessage(message)
         }
     }
 }
