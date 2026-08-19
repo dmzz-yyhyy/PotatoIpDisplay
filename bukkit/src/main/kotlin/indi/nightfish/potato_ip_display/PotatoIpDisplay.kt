@@ -13,6 +13,7 @@ import indi.nightfish.potato_ip_display.util.IpData
 import indi.nightfish.potato_ip_display.util.UpdateUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.bstats.bukkit.Metrics
@@ -28,7 +29,7 @@ class PotatoIpDisplay : JavaPlugin() {
         lateinit var instance: PotatoIpDisplay
         val plugin by lazy { instance }
     }
-    val pluginScope = CoroutineScope(Dispatchers.Default)
+    val pluginScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     lateinit var conf: Config
 

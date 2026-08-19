@@ -21,6 +21,8 @@ class PlaceholderIntegration : PlaceholderExpansion() {
         return plugin.description.version
     }
 
+    override fun persist() = true
+
     override fun onPlaceholderRequest(
         player: Player?,
         params: String
@@ -36,6 +38,7 @@ class PlaceholderIntegration : PlaceholderExpansion() {
             "region" -> ipParse.region
             "isp" -> ipParse.isp
             "fallback" -> ipParse.fallback
+            "is_ipv6" -> ip.contains(":").toString()
             else -> null
         }
     }
