@@ -6,49 +6,59 @@ import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 
 object ConfigManager {
+    private const val LATEST_VERSION = 3
 
     fun load(plugin: JavaPlugin): Config {
         val configFile = File(plugin.dataFolder, "config.yml")
-        val latestVersion = 2
 
         if (!configFile.exists()) {
             plugin.saveResource("config.yml", false)
-            return buildConfig(YamlConfiguration.loadConfiguration(configFile))
+            return buildConfig(loadYaml(configFile))
         }
 
-        val oldCfg = YamlConfiguration.loadConfiguration(configFile)
+        val oldCfg = loadYaml(configFile)
         val oldVersion = oldCfg.getInt("config-version", 1)
+        if (oldVersion >= LATEST_VERSION) return buildConfig(oldCfg)
 
-        if (oldVersion < latestVersion) {
-            plugin.logger.info("Updating config file from v$oldVersion -> v$latestVersion")
-            plugin.saveResource("config.yml", true)
-            val newCfg = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "config.yml"))
+        plugin.logger.info("Updating config file from v$oldVersion -> v$LATEST_VERSION")
+        val backupFile = File(plugin.dataFolder, "config.yml.v$oldVersion.old")
+        configFile.copyTo(backupFile, overwrite = true)
+        plugin.saveResource("config.yml", true)
 
-            oldCfg.getKeys(true).forEach { path ->
-                if (path != "config-version") {
-                    newCfg.set(path, oldCfg.get(path))
-                }
+        val newCfg = loadYaml(configFile)
+        oldCfg.getKeys(true)
+            .filter { path ->
+                path != "config-version" &&
+                    !oldCfg.isConfigurationSection(path) &&
+                    newCfg.contains(path)
             }
+            .forEach { path -> newCfg.set(path, oldCfg.get(path)) }
 
-            migrateConfig(oldVersion, newCfg)
-            newCfg.set("config-version", latestVersion)
+        migrateConfig(oldVersion, oldCfg, newCfg)
+        newCfg.set("config-version", LATEST_VERSION)
+        newCfg.save(configFile)
 
-            newCfg.save(configFile)
-            plugin.logger.info("Config file updated to: v$latestVersion")
-            plugin.logger.info("To view changes and updates, visit GitHub Releases:")
-            plugin.logger.info("要查看变更和更新内容，请前往本插件 GitHub Releases:")
-            plugin.logger.info(">> https://github.com/dmzz-yyhyy/PotatoIpDisplay/releases")
-
-            return buildConfig(newCfg)
-        }
-
-        return buildConfig(oldCfg)
+        plugin.logger.info("Old config backed up to: ${backupFile.name}")
+        plugin.logger.info("Config file updated to: v$LATEST_VERSION")
+        plugin.logger.info("To view changes and updates, visit GitHub Releases:")
+        plugin.logger.info("要查看变更和更新内容，请前往本插件 GitHub Releases:")
+        plugin.logger.info(">> https://github.com/dmzz-yyhyy/PotatoIpDisplay/releases")
+        return buildConfig(newCfg)
     }
 
-    private fun migrateConfig(oldVersion: Int, newCfg: YamlConfiguration) {
-        when (oldVersion) {
-            1 -> migrateV1toV2(newCfg)
+    private fun loadYaml(file: File): YamlConfiguration =
+        YamlConfiguration().apply {
+            options().parseComments(true)
+            load(file)
         }
+
+    private fun migrateConfig(
+        oldVersion: Int,
+        oldCfg: YamlConfiguration,
+        newCfg: YamlConfiguration
+    ) {
+        if (oldVersion < 2) migrateV1toV2(newCfg)
+        if (oldVersion < 3) migrateV2toV3(oldCfg, newCfg)
     }
 
     private fun migrateV1toV2(cfg: YamlConfiguration) {
@@ -62,12 +72,20 @@ object ConfigManager {
                 }
             }
         }
-        if (!cfg.contains("options.custom-unknown-string")) {
-            cfg.set("options.custom-unknown-string", "未知")
-        }
-        if (!cfg.contains("options.mode-ipv6")) {
-            cfg.set("options.mode-ipv6", "ping0")
-        }
+    }
+
+    private fun migrateV2toV3(oldCfg: YamlConfiguration, newCfg: YamlConfiguration) {
+        val oldMode = oldCfg.getString("options.mode-ipv6")
+            ?: oldCfg.getString("options.modev6")
+
+        newCfg.set(
+            "options.mode-ipv6",
+            when (oldMode?.lowercase()) {
+                "zxinc" -> "zxinc"
+                "ping0", "ipdb" -> "zxinc"
+                else -> "disabled"
+            }
+        )
     }
 
     private fun buildConfig(fc: FileConfiguration): Config {
@@ -75,10 +93,10 @@ object ConfigManager {
             configVersion = fc.getInt("config-version", 1),
             pluginConfigVersion = 1,
             options = Config.Options(
-                mode = fc.getString("options.mode") ?: "ip2region",
+                mode = fc.getString("options.mode")?.lowercase() ?: "ip2region",
                 xdbBuffer = fc.getString("options.xdb-buffer") ?: "vindex",
                 allowbStats = fc.getBoolean("options.allow-bstats"),
-                modeV6 = fc.getString("options.modev6") ?: "ipdb",
+                modeV6 = fc.getString("options.mode-ipv6")?.lowercase() ?: "disabled",
                 customUnknownString = fc.getString("options.custom-unknown-string") ?: "未知"
             ),
             message = Config.Message(

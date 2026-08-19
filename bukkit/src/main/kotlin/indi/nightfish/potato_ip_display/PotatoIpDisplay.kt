@@ -4,12 +4,17 @@ import indi.nightfish.potato_ip_display.command.PotatoIpDisplayCommand
 import indi.nightfish.potato_ip_display.integration.PlaceholderIntegration
 import indi.nightfish.potato_ip_display.listener.MessageListener
 import indi.nightfish.potato_ip_display.listener.PlayerJoinListener
+import indi.nightfish.potato_ip_display.parser.IpParseFactory
 import indi.nightfish.potato_ip_display.util.Config
 import indi.nightfish.potato_ip_display.util.ConfigManager
+import indi.nightfish.potato_ip_display.util.IpAttributeMap
+import indi.nightfish.potato_ip_display.util.IpCache
+import indi.nightfish.potato_ip_display.util.IpData
 import indi.nightfish.potato_ip_display.util.UpdateUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.bstats.bukkit.Metrics
 import org.bukkit.Bukkit
 import org.bukkit.event.HandlerList
@@ -37,6 +42,7 @@ class PotatoIpDisplay : JavaPlugin() {
         instance = this
         initPlugin()
         initResources()
+        testParsers()
 
         if (conf.options.allowbStats) Metrics(this, 21473)
         log("PotatoIpDisplay has been enabled. [mode: ${conf.options.mode}]")
@@ -52,23 +58,61 @@ class PotatoIpDisplay : JavaPlugin() {
         val configFile = File(dataFolder, "config.yml")
         val dbFile = File(dataFolder, "ip2region.xdb")
         val authors = this.description.authors
-        val isLite = false
-        val ip2regionDatabaseURL =
-            "https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region.xdb"
 
         if ("yukonisen" !in authors || "NightFish" !in authors) this.isEnabled = false
         if (!configFile.exists()) this.saveDefaultConfig()
 
         if (conf.options.mode == "ip2region" && !dbFile.exists()) {
-            if (isLite) {
-                UpdateUtil.downloadDatabase(ip2regionDatabaseURL, dbFile.toPath())
-                // TODO: Download db files from internet for lite builds
-            } else { /* For non-lite builds, ip2region.xdb included in jar */
-                saveResource("ip2region.xdb", false)
-                log("ip2region.xdb saved to plugin directory.")
-            }
+            saveResource("ip2region.xdb", false)
+            log("ip2region.xdb saved to plugin directory.")
         }
 
+    }
+
+    fun testParsers() {
+        pluginScope.launch(Dispatchers.IO) {
+            testParser("IPv4", conf.options.mode, "223.5.5.5")
+
+            if (conf.options.modeV6 != "disabled") {
+                testParser("IPv6", conf.options.modeV6, "2408:8000:c000::8888")
+            }
+        }
+    }
+
+    private fun testParser(
+        name: String,
+        mode: String,
+        ip: String,
+    ) {
+        logger.info("Now testing $mode with $name [$ip]")
+        IpCache.invalidate(ip)
+        IpAttributeMap.ip2regionRawDataMap.remove(ip)
+        IpAttributeMap.pconlineRawDataMap.remove(ip)
+        IpAttributeMap.ipApiRawDataMap.remove(ip)
+        IpAttributeMap.zxincRawDataMap.remove(ip)
+
+        runCatching {
+            val result = IpParseFactory.parse(ip)
+            check(!result.isUnknown()) { "$name parser returned no usable data for $ip" }
+            result
+        }.onSuccess { r ->
+            logger.info(
+                "$name test success: country=${r.country}, province=${r.province}, city=${r.city}, " +
+                    "region=${r.region}, ISP=${r.isp}, fallback=${r.fallback}"
+            )
+        }.onFailure { exception ->
+            logger.log(
+                Level.SEVERE,
+                "$name test failed: mode=$mode, ip=$ip",
+                exception
+            )
+        }
+    }
+
+    private fun IpData.isUnknown(): Boolean {
+        val unknown = conf.options.customUnknownString
+        return listOf(region, country, province, city, isp, fallback)
+            .all { it.isBlank() || it == unknown }
     }
 
     fun initPlugin() {

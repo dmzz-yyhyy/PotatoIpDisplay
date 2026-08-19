@@ -3,16 +3,20 @@
 # 详情：[https://github.com/dmzz-yyhyy/PotatoIpDisplay]
 
 # 请勿修改！
-config-version: 2
+config-version: 3
 
 # 常规设置
 options:
-  # 查询模式: "pconline"（在线 API）, "ip2region"（本地）或 "ip-api"（在线 API）
-  # "ip2region" 模式为本地查询，插件会自动保存内置的文件至对应路径。
-  # 也可以从 [https://github.com/lionsoul2014/ip2region/tree/master/data] 下载
+  # IPv4 查询模式：
+  # - "ip2region"：内置的本地数据库
+  # - "pconline"、"ip-api"：在线 API
   mode: "ip2region"
-  # IPv6 查询模式: "disabled"（禁用）, "ping0"（在线 API）
-  mode-ipv6: "ping0"
+
+  # IPv6 查询模式：
+  # - "disabled"：禁用 IPv6 查询
+  # - "zxinc"：使用 https://ip.zxinc.org/ 在线查询
+  mode-ipv6: "disabled"
+
   # 缓存模式：只有模式设置为 ip2region 时生效，用于加速查询。
   # "none": 完全基于文件，不进行缓存。
   # "vindex": 额外占用固定的 512 KB 内存，缓存 VectorIndex 数据。

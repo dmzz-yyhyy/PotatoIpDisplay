@@ -15,8 +15,6 @@
 - `ip2region` - [lionsoul2014/ip2region](https://github.com/lionsoul2014/ip2region) 本地查询 提供IPv4查询
 - `pconline` - [太平洋网络IP地址查询Web接口](http://whois.pconline.com.cn/) 在线查询 提供IPv4查询
 - `ip-api` - [IP-API.com IP Geolocation API](https://ip-api.com/) 在线查询 提供IPv4查询
-- `cz88` - [纯真社区版IP库](https://www.cz88.net/help?id=free) 本地查询 提供IPv4、IPv6查询 （即将支持）
-  - IP地址位置数据由 [纯真CZ88](https://www.cz88.net)提供支持
 
 ### 以及
 - 提供可自定义的配置文件
@@ -28,26 +26,26 @@
 
 ## 命令与权限
 
-| 命令                                    | 描述                     | 权限                        | 默认 |
-|:--------------------------------------|:-----------------------|:--------------------------|:---|
-| /pipd                                 | 等效于 `/potatoipdisplay` | `potatoipdisplay.command` | OP |
-| /potatoipdisplay                      | 插件信息                   | `potatoipdisplay.command` | OP |
-| /potatoipdisplay about                | 显示关于信息                 | `potatoipdisplay.command` | OP |
-| /potatoipdisplay clear [player/cache] | 清除玩家/查询缓存              | `potatoipdisplay.command` | OP |
-| /potatoipdisplay lookup [玩家/IPv4]     | 查询玩家或IP                | `potatoipdisplay.lookup`  | OP |
-| /potatoipdisplay reload               | 重载插件                   | `potatoipdisplay.reload`  | OP |
+| 命令                                    | 描述                        | 权限                        | 默认 |
+|:----------------------------------------|:----------------------------|:----------------------------|:-----|
+| /pipd                                   | 等效于 `/potatoipdisplay`   | `potatoipdisplay.command`   | OP   |
+| /potatoipdisplay                        | 插件信息                    | `potatoipdisplay.command`   | OP   |
+| /potatoipdisplay about                  | 显示关于信息                | `potatoipdisplay.command`   | OP   |
+| /potatoipdisplay clear [player/cache]   | 清除玩家/查询缓存           | `potatoipdisplay.command`   | OP   |
+| /potatoipdisplay lookup [玩家/IPv4]     | 查询玩家或IP                | `potatoipdisplay.lookup`    | OP   |
+| /potatoipdisplay reload                 | 重载插件                    | `potatoipdisplay.reload`    | OP   |
 
 ## Placeholder API
 
-| 变量                           | 描述          |
-|:-----------------------------|:------------|
+| 变量                         | 描述           |
+|:-----------------------------|:---------------|
 | `%potatoipdisplay_ip%`       | 玩家的 IP      |
-| `%potatoipdisplay_country%`  | IP 所属国家     |
-| `%potatoipdisplay_province%` | IP 所属省份     |
-| `%potatoipdisplay_city%`     | IP 所属城市     |
-| `%potatoipdisplay_region%`   | IP 所属区域     |
-| `%potatoipdisplay_isp%`      | 运营商信息       |
-| `%potatoipdisplay_fallback%` | fallback 变量 |
+| `%potatoipdisplay_country%`  | IP 所属国家    |
+| `%potatoipdisplay_province%` | IP 所属省份    |
+| `%potatoipdisplay_city%`     | IP 所属城市    |
+| `%potatoipdisplay_region%`   | IP 所属区域    |
+| `%potatoipdisplay_isp%`      | 运营商信息     |
+| `%potatoipdisplay_fallback%` | fallback 变量  |
 
 #### 什么是 fallback 变量？
 

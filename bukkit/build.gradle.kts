@@ -20,12 +20,6 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-sourceSets {
-    main {
-        java.srcDir("../external/ipdb/src/main/java")
-    }
-}
-
 repositories {
     mavenCentral()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")

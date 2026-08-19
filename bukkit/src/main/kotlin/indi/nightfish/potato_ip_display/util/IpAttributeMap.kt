@@ -1,7 +1,6 @@
 package indi.nightfish.potato_ip_display.util
 
 import com.google.gson.JsonObject
-import net.ipip.ipdb.CityInfo
 import java.util.concurrent.ConcurrentHashMap
 
 object IpAttributeMap {
@@ -10,7 +9,7 @@ object IpAttributeMap {
     val ipApiRawDataMap: MutableMap<String, JsonObject> = mutableMapOf()
     val playerIpAttributeMap: MutableMap<String, String> = mutableMapOf()
     val playerIpAddressMap: MutableMap<String, String> = mutableMapOf()
-    val ipdbRawDataMap: MutableMap<String, CityInfo> = mutableMapOf()
+    val zxincRawDataMap: MutableMap<String, JsonObject> = ConcurrentHashMap()
 
 }
 
@@ -30,6 +29,7 @@ object IpCache {
         return cache.computeIfAbsent(ip) { loader() }
     }
 
-    fun invalidate(player: String) {
+    fun invalidate(ip: String) {
+        cache.remove(ip)
     }
 }

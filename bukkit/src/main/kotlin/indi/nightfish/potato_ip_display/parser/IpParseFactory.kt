@@ -4,7 +4,7 @@ import indi.nightfish.potato_ip_display.PotatoIpDisplay.Instance.plugin
 import indi.nightfish.potato_ip_display.parser.provider.Ip2regionParser
 import indi.nightfish.potato_ip_display.parser.provider.IpApiParser
 import indi.nightfish.potato_ip_display.parser.provider.PconlineParser
-import indi.nightfish.potato_ip_display.parser.providerv6.IpdbParser
+import indi.nightfish.potato_ip_display.parser.providerv6.ZxincParser
 import indi.nightfish.potato_ip_display.util.IpAttributeMap
 import indi.nightfish.potato_ip_display.util.IpCache
 import indi.nightfish.potato_ip_display.util.IpData
@@ -14,21 +14,31 @@ import java.net.InetAddress
 
 object IpParseFactory {
 
-    fun parse(ip: String): IpData = IpCache.get(ip) {
+    fun parse(ip: String): IpData {
         if (ip.contains(":")) {
-            when (plugin.conf.options.modeV6) {
-                "ipdb" -> IpdbParser(ip).toIpData()
+            return when (plugin.conf.options.modeV6) {
+                "disabled" -> {
+                    plugin.logger.severe("Resolution for IPv6 is disabled in config, returning unknown.")
+                    unknownData()
+                }
+                "zxinc" -> ZxincParser(ip).toIpData()
                 else -> throw IllegalArgumentException("Invalid IPv6 mode: ${plugin.conf.options.modeV6}")
             }
-        } else {
+        }
+
+        return IpCache.get(ip) {
             when (plugin.conf.options.mode) {
                 "pconline" -> PconlineParser(ip).toIpData()
                 "ip2region" -> Ip2regionParser(ip).toIpData()
-                "ipdb" -> IpdbParser(ip).toIpData()
                 "ip-api" -> IpApiParser(ip).toIpData()
-                else -> throw IllegalArgumentException("Invalid mode: ${plugin.conf.options.mode}")
+                else -> throw IllegalArgumentException("Invalid mode set in config.yml: ${plugin.conf.options.mode}")
             }
         }
+    }
+
+    private fun unknownData(): IpData {
+        val unknown = plugin.conf.options.customUnknownString
+        return IpData(unknown, unknown, unknown, unknown, unknown, unknown)
     }
 
     fun getPlayerIp(player: Player, fallback: String = "0.0.0.0"): String {

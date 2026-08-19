@@ -65,12 +65,13 @@ class PotatoIpDisplayCommand : TabExecutor {
             sender.sendMessage("§c您没有执行重载的权限")
             return
         }
-        plugin.logger.info("正在重载 v${plugin.description.version}...")
+        plugin.logger.info("正在重新加载 ${plugin.name} v${plugin.description.version}...")
         kotlin.runCatching {
             plugin.conf = ConfigManager.load(plugin)
             plugin.initResources()
             HandlerList.unregisterAll(plugin)
             plugin.initPlugin()
+            plugin.testParsers()
         }.onSuccess {
             sender.sendMessage("§7[§6PotatoIPDisplay§7] §a重载成功！")
         }.onFailure { ex ->
@@ -86,13 +87,13 @@ class PotatoIpDisplayCommand : TabExecutor {
             return
         }
         val target = args.getOrNull(1) ?: run {
-            sender.sendMessage("§e用法: /$label lookup [玩家名|IPv4]")
+            sender.sendMessage("§e用法: /$label lookup [在线玩家名|IP]")
             return
         }
         val address = Bukkit.getPlayerExact(target)?.address?.address?.hostAddress
         val ip = address ?: target
-        if (address == null && !IpParseFactory. regexValidated(ip)) {
-            sender.sendMessage("§c玩家离线，或 IP 无效")
+        if (address == null && !IpParseFactory.regexValidated(ip)) {
+            sender.sendMessage("§c查询的玩家离线，或 IP 无效")
             return
         }
         sender.sendMessage("§7[§6PotatoIPDisplay§7] §f查询: §b$ip")
@@ -105,7 +106,8 @@ class PotatoIpDisplayCommand : TabExecutor {
     private fun clearCommand(sender: CommandSender, label: String, args: Array<String>) {
         val option = args.getOrNull(1)?.lowercase() ?: run {
             val itemCount = IpAttributeMap.playerIpAttributeMap.size
-            val cacheCount = IpAttributeMap.ip2regionRawDataMap.size + IpAttributeMap.pconlineRawDataMap.size + IpAttributeMap.ipApiRawDataMap.size
+            val cacheCount = IpAttributeMap.ip2regionRawDataMap.size + IpAttributeMap.pconlineRawDataMap.size +
+                IpAttributeMap.ipApiRawDataMap.size + IpAttributeMap.zxincRawDataMap.size
             sender.sendMessage("§7[§6PotatoIPDisplay§7] §e用法: /$label clear <player|cache>")
             sender.sendMessage("§7[§6PotatoIPDisplay§7] §f缓存: 玩家 §b$itemCount§f 项, 查询 §b$cacheCount§f 项")
             return
@@ -114,8 +116,12 @@ class PotatoIpDisplayCommand : TabExecutor {
             "player" -> IpAttributeMap.playerIpAttributeMap.also { it.clear() }.size
             "cache" -> {
                 val map = IpAttributeMap
-                val total = map.ip2regionRawDataMap.size + map.pconlineRawDataMap.size + map.ipApiRawDataMap.size
-                map.ip2regionRawDataMap.clear(); map.pconlineRawDataMap.clear(); map.ipApiRawDataMap.clear()
+                val total = map.ip2regionRawDataMap.size + map.pconlineRawDataMap.size +
+                    map.ipApiRawDataMap.size + map.zxincRawDataMap.size
+                map.ip2regionRawDataMap.clear()
+                map.pconlineRawDataMap.clear()
+                map.ipApiRawDataMap.clear()
+                map.zxincRawDataMap.clear()
                 total
             }
             else -> {
