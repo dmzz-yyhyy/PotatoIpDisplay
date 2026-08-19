@@ -29,3 +29,6 @@ permissions:
   potatoipdisplay.reload:
     description: "Reload PotatoIPDisplay"
     default: op
+  potatoipdisplay.override:
+    description: "Override a player's IP through a permission node"
+    default: false

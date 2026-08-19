@@ -57,7 +57,7 @@ class PotatoIpDisplayCommand : TabExecutor {
         val desc = plugin.description
         sender.sendMessage("§7[§6PotatoIPDisplay§7] §f版本 §b${desc.version} §fby §b${desc.authors.joinToString(", ")}")
         sender.sendMessage("§7[§6PotatoIPDisplay§7] §6开源项目地址: §bhttps://github.com/dmzz-yyhyy/PotatoIpDisplay")
-        sender.sendMessage("§7[§6PotatoIPDisplay§7] §6文档: §bhttps://upt.curiousers.org/docs/PotatoIpDisplay/intro")
+        sender.sendMessage("§7[§6PotatoIPDisplay§7] §6文档: §bhttps://mc.nariko.org/docs/PotatoIpDisplay/intro")
     }
 
     private fun reloadPlugin(sender: CommandSender) {
@@ -90,9 +90,9 @@ class PotatoIpDisplayCommand : TabExecutor {
             sender.sendMessage("§e用法: /$label lookup [在线玩家名|IP]")
             return
         }
-        val address = Bukkit.getPlayerExact(target)?.address?.address?.hostAddress
-        val ip = address ?: target
-        if (address == null && !IpParseFactory.regexValidated(ip)) {
+        val player = Bukkit.getPlayerExact(target)
+        val ip = player?.let(IpParseFactory::getPlayerIp) ?: target
+        if (player == null && !IpParseFactory.isValidIp(ip)) {
             sender.sendMessage("§c查询的玩家离线，或 IP 无效")
             return
         }

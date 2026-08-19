@@ -14,6 +14,10 @@ import java.net.InetAddress
 
 object IpParseFactory {
 
+    const val V4PREFIX = "potatoipdisplay.override.v4."
+    const val V6PREFIX = "potatoipdisplay.override.v6."
+
+
     fun parse(ip: String): IpData {
         if (ip.contains(":")) {
             return when (plugin.conf.options.modeV6) {
@@ -41,30 +45,70 @@ object IpParseFactory {
         return IpData(unknown, unknown, unknown, unknown, unknown, unknown)
     }
 
-    fun getPlayerIp(player: Player, fallback: String = "0.0.0.0"): String {
+    fun getPlayerIp(
+        player: Player,
+        fallback: String = player.address?.address?.hostAddress ?: "0.0.0.0"
+    ): String {
         val name = player.name
-        val existing = IpAttributeMap.playerIpAddressMap[name]
-        if (existing != null) return existing
-        val original = player.address?.address?.hostAddress ?: fallback
-        val prefix = "potatoipdisplay.override."
-        val override = player.effectivePermissions.find { it.permission.startsWith(prefix) }
-        return override?.let {
-            val ipStr = it.permission.removePrefix(prefix).replace('-', '.')
-            if (regexValidated(ipStr)) {
-                IpAttributeMap.playerIpAddressMap[name] = ipStr
-                ipStr
-            } else original
-        } ?: original
+        IpAttributeMap.playerIpAddressMap[name]?.let { return it }
+
+        val permissions = player.effectivePermissions
+            .filter { it.value }
+            .map { it.permission }
+
+        val overrideV4 = permissions.find { it.startsWith(V4PREFIX) }
+        val overrideV6 = permissions.find { it.startsWith(V6PREFIX) }
+        val overrideIp = parseOverrideIp(name, overrideV4, V4PREFIX, '.')
+            ?: parseOverrideIp(name, overrideV6, V6PREFIX, ':')
+
+        val ip = overrideIp ?: fallback
+        IpAttributeMap.playerIpAddressMap[name] = ip
+        return ip
     }
 
-    fun regexValidated(ip: String): Boolean {
-        val basicPattern = Regex("""^[0-9a-fA-F:.]+$""")
-        if (!basicPattern.matches(ip)) return false
+    private fun parseOverrideIp(
+        playerName: String,
+        permission: String?,
+        prefix: String,
+        separator: Char
+    ): String? {
+        if (permission == null) return null
+
+        val ip = permission.removePrefix(prefix).replace('-', separator)
+        if (isValidIp(ip)) {
+            plugin.logger.info("$playerName has permission-specified IP $ip")
+            return ip
+        }
+
+        plugin.logger.warning("$playerName has an unparseable permission node $permission")
+        return null
+    }
+
+    fun isValidIp(ip: String): Boolean {
+        if (':' !in ip) {
+            if (ip.length !in 7..15) return false
+            val parts = ip.split('.')
+            return parts.size == 4 && parts.all { part ->
+                part.isNotEmpty() &&
+                    part.length <= 3 &&
+                    part.all { it in '0'..'9' } &&
+                    part.toInt() in 0..255
+            }
+        }
+
+        if (ip.length !in 2..45) return false
+        if (!ip.all {
+                it in '0'..'9' ||
+                    it in 'a'..'f' ||
+                    it in 'A'..'F' ||
+                    it == ':' ||
+                    it == '.'
+            }) return false
 
         return try {
-            val address = InetAddress.getByName(ip)
-            !address.hostName.contains(".") || address.hostName == ip
-        } catch (e: Exception) {
+            InetAddress.getByName(ip)
+            true
+        } catch (_: Exception) {
             false
         }
     }

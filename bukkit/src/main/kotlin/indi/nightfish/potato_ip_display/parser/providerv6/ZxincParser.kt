@@ -13,7 +13,7 @@ import java.net.http.HttpResponse
 class ZxincParser(private val ip: String) : IpParse {
     private val get = getZxincData()
     private val unknown: String = plugin.conf.options.customUnknownString
-    private val countryInfo = splitInfo(get["country"]?.asString)
+    private val countryInfo = splitInfo(get["country"]?.asString?.replace(' ', '\t'))
     private val localInfo = splitInfo(get["local"]?.asString)
 
     override fun getCountry(): String =

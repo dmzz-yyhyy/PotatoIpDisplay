@@ -19,8 +19,11 @@ class PlayerJoinListener: Listener {
     @EventHandler
     fun onPlayerLogin(event: PlayerLoginEvent) {
         val player = event.player
+        IpAttributeMap.playerIpAddressMap.remove(player.name)
+        IpAttributeMap.playerIpAttributeMap.remove(player.name)
+        val ip = IpParseFactory.getPlayerIp(player, event.address.hostAddress)
+
         plugin.pluginScope.launch {
-            val ip = IpParseFactory.getPlayerIp(player)
             val data = IpParseFactory.parse(ip)
 
             IpAttributeMap.playerIpAttributeMap[player.name] = data.fallback

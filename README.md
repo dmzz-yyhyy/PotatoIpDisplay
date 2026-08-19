@@ -2,7 +2,7 @@
 
 一款提供查询与显示玩家 IP 归属地信息的 Bukkit 插件。
 
-使用文档详见 [此处](https://upt.curiousers.org/docs/PotatoIpDisplay/intro) 。
+使用文档详见 [此处](https://mc.nariko.org/docs/PotatoIpDisplay/intro) 。
 
 ## 特性
 
@@ -20,7 +20,7 @@
 - 提供可自定义的配置文件
 - **支持 Placeholder API**，可配合其他插件使用查询结果
   - *玩家称号，消息格式化，等等*
-- 插件最初为 [土豆网络](https://upt.curiousers.org) 定制，开源后采纳了大家提供的许多建议，相比初版已经优化和解决了不少问题。感谢你的帮助！
+- 插件最初为 [土豆网络](https://mc.nariko.org) 定制，开源后采纳了大家提供的许多建议，相比初版已经优化和解决了不少问题。感谢你的帮助！
 
 ## 
 
@@ -32,24 +32,25 @@
 | /potatoipdisplay                        | 插件信息                    | `potatoipdisplay.command`   | OP   |
 | /potatoipdisplay about                  | 显示关于信息                | `potatoipdisplay.command`   | OP   |
 | /potatoipdisplay clear [player/cache]   | 清除玩家/查询缓存           | `potatoipdisplay.command`   | OP   |
-| /potatoipdisplay lookup [玩家/IPv4]     | 查询玩家或IP                | `potatoipdisplay.lookup`    | OP   |
+| /potatoipdisplay lookup [玩家/IP地址    | 查询玩家或IP                | `potatoipdisplay.lookup`    | OP   |
 | /potatoipdisplay reload                 | 重载插件                    | `potatoipdisplay.reload`    | OP   |
 
 ## Placeholder API
 
-| 变量                         | 描述           |
-|:-----------------------------|:---------------|
-| `%potatoipdisplay_ip%`       | 玩家的 IP      |
-| `%potatoipdisplay_country%`  | IP 所属国家    |
-| `%potatoipdisplay_province%` | IP 所属省份    |
-| `%potatoipdisplay_city%`     | IP 所属城市    |
-| `%potatoipdisplay_region%`   | IP 所属区域    |
-| `%potatoipdisplay_isp%`      | 运营商信息     |
-| `%potatoipdisplay_fallback%` | fallback 变量  |
+| 变量                         | 描述           | 示例        |
+|:-----------------------------|:---------------|:------------|
+| `%potatoipdisplay_ip%`       | 玩家的 IP      | `101.6.6.6` |
+| `%potatoipdisplay_country%`  | IP 所属国家    | `中国`      |
+| `%potatoipdisplay_province%` | IP 所属省份    | `北京`      |
+| `%potatoipdisplay_city%`     | IP 所属城市    | `北京`      |
+| `%potatoipdisplay_region%`   | IP 所属区域    | `未知`      |
+| `%potatoipdisplay_isp%`      | 运营商信息     | `教育网`    |
+| `%potatoipdisplay_fallback%` | 回退变量       | `北京`      |
+| `%potatoipdisplay_is_ipv6%`  | IP 是否为 IPv6 | `false`     |
 
-#### 什么是 fallback 变量？
+#### 什么是回退变量？
 
-顾名思义，fallback 变量适用于一些无法查询到对应信息的情况。插件将从 `省份` -> `国家` -> `城市` 依次查询并回退到第一个有效结果，从而在最大程度上避免返回"`未知`"值。
+顾名思义，回退变量适用于一些无法查询到对应信息的情况。插件将从 `省份` -> `国家` -> `城市` 依次查询并回退到第一个有效结果，从而在最大程度上避免返回"`未知`"值。
 
 ![demo](assets/papidemo.png)
 
@@ -59,7 +60,7 @@
 ## LICENSE
 ```
 Copyright (C) 2024 by NightFish <hk198580666@outlook.com>
-Copyright (C) 2024 by yukonisen <yukonisen@curiousers.org>
+Copyright (C) 2024 by yukonisen <whenten99@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
