@@ -1,7 +1,7 @@
 package indi.nightfish.potato_ip_display.util
 
 data class Config(
-    val configVersion: Int = 2,
+    val configVersion: Int = 3,
     val pluginConfigVersion: Int,
     val options: Options,
     val message: Message,

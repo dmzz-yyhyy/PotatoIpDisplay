@@ -3,16 +3,20 @@
 # 详情：[https://github.com/dmzz-yyhyy/PotatoIpDisplay]
 
 # 请勿修改！
-config-version: 2
+config-version: 3
 
 # 常规设置
 options:
-  # 查询模式: "pconline"（在线 API）, "ip2region"（本地）或 "ip-api"（在线 API）
-  # "ip2region" 模式为本地查询，插件会自动保存内置的文件至对应路径。
-  # 也可以从 [https://github.com/lionsoul2014/ip2region/tree/master/data] 下载
+  # IPv4 查询模式：
+  # - "ip2region"：内置的本地数据库
+  # - "pconline"、"ip-api"：在线 API
   mode: "ip2region"
-  # IPv6 查询模式: "disabled"（禁用）, "ping0"（在线 API）
-  mode-ipv6: "ping0"
+
+  # IPv6 查询模式：
+  # - "disabled"：禁用 IPv6 查询
+  # - "zxinc"：使用 https://ip.zxinc.org/ 在线查询
+  mode-ipv6: "disabled"
+
   # 缓存模式：只有模式设置为 ip2region 时生效，用于加速查询。
   # "none": 完全基于文件，不进行缓存。
   # "vindex": 额外占用固定的 512 KB 内存，缓存 VectorIndex 数据。
@@ -26,7 +30,8 @@ options:
 # 消息设置
 messages:
   # 插件内部可用 placeholder 示例（可用于 messages.*.string）：
-  # 注意：部分查询结果可用性取决于数据源；此处并非 PAPI 变量。
+  # 下列为插件内置变量，部分查询结果可用性取决于数据源。
+  # 如果启用了 PAPI 集成，也可以同时使用 PAPI 变量。
   # %msg%        -> 原消息
   # %playerName% -> 玩家名
   # %ipRegion%   -> IP 所属区域
@@ -34,7 +39,7 @@ messages:
   # %ipProvince% -> IP 所属省
   # %ipCity%     -> IP 所属城市
   # %ipISP%      -> IP 所属 ISP
-  # %ipFallback% -> 回退变量（详情查阅插件文档）
+  # %ipFallback% -> 回退变量（省份、国家、城市 中的首个非“未知“值）
 
   player-chat:
     # 是否接管玩家消息事件。
@@ -54,4 +59,4 @@ papi:
   # 启用 PAPI 支持。需要安装 Placeholder API。
   enabled: false
   # 可用变量：
-  # [https://github.com/dmzz-yyhyy/PotatoIpDisplay#placeholder-api]
+  # 请参考 [https://github.com/dmzz-yyhyy/PotatoIpDisplay#placeholder-api]
